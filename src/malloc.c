@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   malloc.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: elotana <akunegel@student.42.fr>           +#+  +:+       +#+        */
+/*   By: akunegel <akunegel@student.42.fr>           +#+  +:+       +#+       */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/01 10:15:55 by elotana           #+#    #+#             */
 /*   Updated: 2026/10/01 10:15:57 by elotana          ###   ########.fr       */
@@ -13,6 +13,7 @@
 #include "../inc/malloc.h"
 
 t_heap heap = {NULL, NULL, NULL, 0};
+pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void *allocate(t_zone_type type, size_t size)
 {
@@ -42,7 +43,7 @@ static void *large_allocation(size_t size)
 	return (char *)zone->blocks + BLOCK_HDR;
 }
 
-void *malloc(size_t size)
+void *malloc_impl(size_t size)
 {
 	if (size == 0) {
 		size = 1;
@@ -62,4 +63,12 @@ void *malloc(size_t size)
 	} else {
 		return large_allocation(size);
 	}
+}
+
+void	*malloc(size_t size)
+{
+	pthread_mutex_lock(&g_lock);
+	void *ret = malloc_impl(size);
+	pthread_mutex_unlock(&g_lock);
+	return ret;
 }

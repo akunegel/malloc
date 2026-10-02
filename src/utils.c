@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: elotana <akunegel@student.42.fr>           +#+  +:+       +#+        */
+/*   By: akunegel <akunegel@student.42.fr>           +#+  +:+       +#+       */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/01 10:16:08 by elotana           #+#    #+#             */
 /*   Updated: 2026/10/01 10:16:09 by elotana          ###   ########.fr       */

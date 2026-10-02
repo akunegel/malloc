@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: elotana <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: akunegel <marvin@42.fr>                     +#+  +:+       +#+       */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/01 17:48:19 by elotana           #+#    #+#             */
 /*   Updated: 2026/10/01 17:48:25 by elotana          ###   ########.fr       */
@@ -12,10 +12,10 @@
 
 #include "../inc/malloc.h"
 
-t_zone	*find_zone(void *ptr)
+t_zone *find_zone(void *ptr)
 {
-	t_zone	*lists[3] = {heap.tiny, heap.small, heap.large};
-	char	*p = (char *)ptr;
+	t_zone *lists[3] = {heap.tiny, heap.small, heap.large};
+	char *p = (char *)ptr;
 
 	for (int i = 0; i < 3; i++) {
 		for (t_zone *z = lists[i]; z; z = z->next) {
@@ -49,7 +49,7 @@ static void release_zone(t_zone *zone)
 		fatal();
 }
 
-void free(void *ptr)
+void free_impl(void *ptr)
 {
 	if (!ptr)
 		return;
@@ -89,4 +89,11 @@ void free(void *ptr)
 	} else {
 		update_max_free_size(zone);
 	}
+}
+
+void free(void *ptr)
+{
+	pthread_mutex_lock(&g_lock);
+	free_impl(ptr);
+	pthread_mutex_unlock(&g_lock);
 }

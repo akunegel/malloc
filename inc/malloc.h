@@ -18,6 +18,7 @@
 # include <stdint.h>
 # include <sys/mman.h>
 # include <unistd.h>
+# include <pthread.h>
 
 # define T_MAX_SIZE ((size_t)128)
 # define S_MAX_SIZE ((size_t)1024)
@@ -66,6 +67,7 @@ typedef struct s_heap
 } t_heap;
 
 extern t_heap heap;
+extern pthread_mutex_t g_lock;
 
 void	*malloc(size_t size);
 void	free(void *ptr);
@@ -80,5 +82,7 @@ t_block	*find_free_block(t_zone *zone, size_t size);
 void	split_block(t_block *block, size_t size);
 void	fatal(void);
 t_zone	*find_zone(void *ptr);
+void	*malloc_impl(size_t size);
+void	free_impl(void *ptr);
 
 #endif

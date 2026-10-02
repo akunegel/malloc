@@ -4,7 +4,7 @@ endif
 NAME     := libft_malloc_$(HOSTTYPE).so
 LINK     := libft_malloc.so
 
-CC       := cc
+CC       := gcc
 CFLAGS   := -Wall -Wextra -Werror
 CPPFLAGS := -Iinc -Ift_printf
 SHARED   := -shared -fPIC
@@ -14,7 +14,8 @@ SRC_MALLOC := \
 	src/init.c \
 	src/malloc.c \
 	src/show_alloc_mem.c \
-	src/utils.c
+	src/utils.c \
+	src/realloc.c
 
 SRC_PRINTF := \
 	ft_printf/ft_c.c \

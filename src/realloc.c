@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   realloc.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: elotana <marvin@42.fr>                     +#+  +:+       +#+        */
+/*   By: akunegel <marvin@42.fr>                     +#+  +:+       +#+       */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/02 16:39:38 by elotana           #+#    #+#             */
 /*   Updated: 2026/10/02 16:39:43 by elotana          ###   ########.fr       */
@@ -20,10 +20,10 @@ static void copy_bytes(void *dst, void *src, size_t n)
 		*d++ = *s++;
 }
 
-void *realloc(void *ptr, size_t size)
+static void *realloc_impl(void *ptr, size_t size)
 {
 	if (size == 0) {
-		free(ptr);
+		free_impl(ptr);
 		return NULL;
 	}
 	if (size > SIZE_MAX - 15 - BLOCK_HDR - ZONE_HDR - get_page_size()) {
@@ -34,7 +34,7 @@ void *realloc(void *ptr, size_t size)
 	size = ALIGN16(size);
 
 	if (!ptr)
-		return malloc(size);
+		return malloc_impl(size);
 
 	t_zone *zone = find_zone(ptr);
 	if (!zone) {
@@ -65,11 +65,19 @@ void *realloc(void *ptr, size_t size)
 		update_max_free_size(zone);
 		return (char *)b + BLOCK_HDR;
 	} else {
-		void *new = malloc(size);
+		void *new = malloc_impl(size);
 		if (!new)
 			return NULL;
 		copy_bytes(new, ptr, b->size < size ? b->size : size);
-		free(ptr);
+		free_impl(ptr);
 		return new;
 	}
+}
+
+void *realloc(void *ptr, size_t size)
+{
+	pthread_mutex_lock(&g_lock);
+	void *ret = realloc_impl(ptr, size);
+	pthread_mutex_unlock(&g_lock);
+	return ret;
 }
