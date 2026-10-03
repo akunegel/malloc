@@ -24,6 +24,7 @@ static void *realloc_impl(void *ptr, size_t size)
 {
 	if (size == 0) {
 		free_impl(ptr);
+		errno = EINVAL;
 		return NULL;
 	}
 	if (size > SIZE_MAX - 15 - BLOCK_HDR - ZONE_HDR - get_page_size()) {

@@ -43,6 +43,7 @@ static size_t print_type(t_zone *zone, char *name)
 
 void show_alloc_mem(void)
 {
+	pthread_mutex_lock(&g_lock);
 	size_t	total;
 
 	total = 0;
@@ -50,4 +51,5 @@ void show_alloc_mem(void)
 	total += print_type(heap.small, "SMALL");
 	total += print_type(heap.large, "LARGE");
 	ft_printf("Total : %u bytes\n", (unsigned int)total);
+	pthread_mutex_unlock(&g_lock);
 }

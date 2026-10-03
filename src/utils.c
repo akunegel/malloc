@@ -69,6 +69,6 @@ void split_block(t_block *block, size_t size)
 
 void	fatal(void)
 {
-	write(2, "malloc: fatal error\n", 23);
+	write(2, "malloc: fatal error\n", 20);
 	__builtin_trap();
 }
