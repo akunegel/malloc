@@ -1,60 +1,68 @@
-# =========================================================================== #
-#                              malloc test suite                              #
-# =========================================================================== #
+# ft_malloc test suite
+#
+#   make          build the allocator (parent dir) and the test binary
+#   make run      build then execute the suite with the allocator preloaded
+#   make clean    remove test objects
+#   make fclean   remove test objects and the binary
+#   make re       rebuild from scratch
+#
+# The binary is linked against ../libft_malloc.so so that malloc/free/realloc
+# resolve to the allocator under test instead of libc, and it is also run
+# with LD_PRELOAD so that allocations made *inside* libc (printf, dlsym, ...)
+# go through the allocator too. main.c independently verifies at runtime that
+# the resolved malloc really lives in the ft_malloc library.
 
-ROOT := ..
+UNAME_M  := $(shell uname -m)
+UNAME_S  := $(shell uname -s)
+HOSTTYPE ?= $(UNAME_M)_$(UNAME_S)
 
-CC       := cc
-CFLAGS   := -Wall -Wextra -Werror -g
-CPPFLAGS := -I$(ROOT)/inc -I$(ROOT)/ft_printf
+ROOT     := ..
+LIB      := $(ROOT)/libft_malloc.so
 
-# --- library sources (malloc module) --------------------------------------- #
-LIB_MALLOC := \
-	$(ROOT)/src/free.c \
-	$(ROOT)/src/init.c \
-	$(ROOT)/src/malloc.c \
-	$(ROOT)/src/show_alloc_mem.c \
-	$(ROOT)/src/utils.c
+CC       := gcc
+CFLAGS   := -Wall -Wextra -Werror -g -O0
+CPPFLAGS :=
+LDFLAGS  := -L$(ROOT) -lft_malloc
+LDLIBS   := -ldl
 
-# --- library sources (printf module) --------------------------------------- #
-LIB_PRINTF := \
-	$(ROOT)/ft_printf/ft_c.c \
-	$(ROOT)/ft_printf/ft_d.c \
-	$(ROOT)/ft_printf/ft_hexa_maj.c \
-	$(ROOT)/ft_printf/ft_hexa_min.c \
-	$(ROOT)/ft_printf/ft_pourcent.c \
-	$(ROOT)/ft_printf/ft_printf.c \
-	$(ROOT)/ft_printf/ft_putstr_fd.c \
-	$(ROOT)/ft_printf/ft_s.c \
-	$(ROOT)/ft_printf/ft_u.c
+ifeq ($(UNAME_S),Darwin)
+RPATH    := -Wl,-rpath,@loader_path/..
+# On Darwin the binary is already linked against the allocator, so no
+# DYLD_INSERT_LIBRARIES is needed (and flat-namespace tricks are avoided).
+RUN_ENV  :=
+else
+RPATH    := -Wl,-rpath,'$$ORIGIN/..'
+RUN_ENV  := LD_PRELOAD=$(abspath $(LIB))
+endif
 
-LIB_OBJ := $(LIB_MALLOC:$(ROOT)/%.c=obj/%.o) $(LIB_PRINTF:$(ROOT)/%.c=obj/%.o)
-LIB_DEP := $(LIB_OBJ:.o=.d)
+TARGET   := malloc_test
+SRC      := main.c
+OBJ      := $(SRC:.c=.o)
 
-TESTS := tiny_test small_test large_test g_test
+all: $(TARGET)
 
-# --- Rules ----------------------------------------------------------------- #
-all: $(TESTS)
+# Always invoke the parent build: it is incremental and cheap.
+.PHONY: lib
+lib:
+	$(MAKE) -C $(ROOT)
 
-obj/%.o: $(ROOT)/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -MMD -MP -c $< -o $@
+$(TARGET): $(OBJ) lib
+	$(CC) $(CFLAGS) $(OBJ) -o $@ $(LDFLAGS) $(RPATH) $(LDLIBS)
 
-libtest.a: $(LIB_OBJ)
-	$(AR) rcs $@ $(LIB_OBJ)
+$(OBJ): $(SRC)
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-$(TESTS): %: %.c libtest.a
-	$(CC) $(CFLAGS) $(CPPFLAGS) $< libtest.a -o $@
+run: $(TARGET)
+	$(RUN_ENV) ./$(TARGET)
+
+test: run
 
 clean:
-	$(RM) -r obj libtest.a
+	$(RM) $(OBJ)
 
 fclean: clean
-	$(RM) $(TESTS)
-	$(RM) -r $(TESTS:=.dSYM)
+	$(RM) $(TARGET)
 
 re: fclean all
 
-.PHONY: all clean fclean re
-
--include $(LIB_DEP)
+.PHONY: all lib run test clean fclean re
